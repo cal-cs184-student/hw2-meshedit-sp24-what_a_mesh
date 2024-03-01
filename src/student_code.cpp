@@ -170,15 +170,17 @@ namespace CGL
     std::vector<HalfedgeIter> mainHalfedges(2);
     std::vector<HalfedgeIter> twinHalfedges(2);
     std::vector<HalfedgeIter> splitHalfedges(2);
-    for (int i = 0; i < 2; i++) {
+    // starter code doesn't manage boundaries well - no good way to do this
+    bool boundary = e0->isBoundary();
+    for (int i = 0; i < 2 - boundary; i++) {
       mainHalfedges[i] = newHalfedge();
       twinHalfedges[i] = newHalfedge();
       splitHalfedges[i] = newHalfedge();
       newEdges[i] = newEdge();
-      newFaces[i] = newFace();
+      newFaces[i] = boundary ? newBoundary() : newFace();
       newEdges[i]->isNew = true;
     }
-    for (int i = 0; i < 2; i++) {
+    for (int i = 0; i < 2 - boundary; i++) {
       mainHalfedges[i]->setNeighbors(
         hh[i]->next()->next(),
         twinHalfedges[i],

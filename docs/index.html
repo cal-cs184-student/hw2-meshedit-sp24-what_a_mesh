@@ -43,6 +43,8 @@
 <h1 align="middle">Project 2: Mesh Edit</h1>
 <h2 align="middle">Derek Guo</h2>
 
+<p>https://cal-cs184-student.github.io/hw-webpages-sp24-DreekFire/hw2/index.html</p>
+
 <br><br>
 
 <div>
@@ -53,7 +55,7 @@
 
     Then, I implemented mesh editing functions to flip and split edges, and combined them to implement loop subdivision.
 
-    Bezier curves/surfaces and meshes offer alternative ways to represent a shape. Bezier curves are smoother, but are much less computationally efficient. The teapot scene loaded much faster with the mesh representation than the Bezier surface one. This may be because checking a Bezier surface for intersection is difficult.
+    Bezier curves/surfaces and meshes offer alternative ways to represent a shape. Bezier curves are smoother, but are much less computationally efficient. The teapot scene loaded much faster with the mesh representation than the Bezier surface one. This may be because checking a Bezier surface for intersection is difficult, so it needs to convert it into a mesh first.
 </p>
 <br>
 
@@ -129,12 +131,34 @@
   Show a screenshot of a slightly different Bezier curve by moving the original control points around and modifying the parameter \(t\) via mouse scrolling.
 </b>
 <p>
-    I dragged the control points around a bit and increased \(t\).
+    I dragged the control points around a bit and took screenshots with increasing values of \(t\).
 </p>  
 <br>
   
 <div align="middle">
-  <img src="images/bzc2.png" align="middle" width="50%">
+  <table style="width:100%">
+    <tr align="center">
+      <td>
+        <img src="images/bzc_new_1.png" align="middle" width="400px" />
+        <figcaption>1</figcaption>
+      </td>
+      <td>
+        <img src="images/bzc_new_2.png" align="middle" width="400px" />
+        <figcaption>2</figcaption>
+      </td>
+    </tr>
+    <br />
+    <tr align="center">
+      <td>
+        <img src="images/bzc_new_3.png" align="middle" width="400px" />
+        <figcaption>3</figcaption>
+      </td>
+      <td>
+        <img src="images/bzc_new_4.png" align="middle" width="400px" />
+        <figcaption>4</figcaption>
+      </td>
+    </tr>
+  </table>
 </div>
 
 <h3 align="middle">Part 2: Bezier Surfaces with Separable 1D de Casteljau</h3>
@@ -142,9 +166,9 @@
   Briefly explain how de Casteljau algorithm extends to Bezier surfaces and how you implemented it in order to evaluate Bezier surfaces.
 </b>
 <p>
-    The de Casteljau algorithm can be extended to Bezier surfaces by interpolating between multiple Bezier curves. In particular, each Bezier curve is interpolated using some interpolation factor $u$, which generates a single point for each curve. Then, these points are again interpolated as a Bezier curve using another interpolation factor $v$. When $u$ and $v$ are swept over a range of values, it is equivalent to generating a surface by interpolating between many Bezier curves.
+    The de Casteljau algorithm can be extended to Bezier surfaces by interpolating between multiple Bezier curves. In particular, each Bezier curve is interpolated using some interpolation factor $u$, which generates a single point for each curve. Then, these points are again interpolated as a Bezier curve using another interpolation factor $v$. When $u$ and $v$ are swept over a range of values, it is equivalent to generating a surface by interpolating between many Bezier curves and taking the union of all interpolates.
 
-    I implemented this by treating each "row" of the grid as a Bezier curve, and running the single-step algorithm as before, except with Vector3D instead of Vector2D, and with the interpolation factor given by the parameter $u$. This was repeated until a single point remained for each Bezier curve. I then treated these new points as another Bezier curve and interpolated between them with the interpolation factor given by the parameter $v$.
+    I implemented this by treating each "row" of the grid as a Bezier curve, and running the single-step algorithm as before, except with Vector3D instead of Vector2D, and with the interpolation factor given by the parameter $u$. This was repeated until a single point remained for each Bezier curve. I then treated these new points as another Bezier curve and interpolated between them with the interpolation factor given by the parameter $v$. Although the starter code uses a square grid of points, the definition of a Bezier surface should also apply to a jagged array of points, though I did not implement this.
 </p>
 <br>
 
@@ -167,7 +191,7 @@
   Briefly explain how you implemented the area-weighted vertex normals.
 </b>
 <p>
-    I iterated through the half-edges rooted at the vertex by starting with ```h = vertex->halfedge()``` and proceeding to ```h->twin()->next()``` at each iteration. For each half-edge $h_i$, I calculated its direction vector as ```v_i = h_i->twin()->vertex()->position - h_i->vertex()->position```. Then I calculated the area-weighted normal of the corresponding triangle using the cross product, ```cross(v_[i+1], v_i)```. In particular, this is equal to the triangle normal multiplied by twice its area. The factor of 2 is constant between all triangles so it will be canceled out when normalized at the end. Finally, we normalize the sum of these area-weighted normals to obtain the final vertex normal.
+    I iterated through the half-edges rooted at the vertex by starting with <code>h = vertex->halfedge()</code> and proceeding to <code>h->twin()->next()</code> at each iteration, in the same way that <code>vertex->degree()</code> traverses half-edges. For each half-edge $h_i$, I calculated its direction vector as <code>v_i = h_i->twin()->vertex()->position - h_i->vertex()->position</code>. Then I calculated the area-weighted normal of the corresponding triangle using the cross product, <code>cross(v_(i+1), v_i)</code>. The cross product gives a vector normal to the triangle, with magnitude equal to the area of the parallelogram formed by the two legs which is equal to twice the area of the triangle. The factor of 2 is constant between all triangles so it will be canceled out when normalized. Finally, we normalize the sum of these area-weighted normals to obtain the final vertex normal.
 </p>
 <br>
 
@@ -197,9 +221,9 @@
   Briefly explain how you implemented the edge flip operation and describe any interesting implementation / debugging tricks you have used.
 </b>
 <p>
-    As recommended, I drew a pair of triangles before and after the edge flip operation. For every element (edge, face, half-edge), I marked which element each reference pointed to after the change. For the first version of the code, I simply made copies of iterators to each element at the very beginning so that none of them would be overwritten or invalidated by setting references in between. For example, if ```halfedge()->next()``` gets assigned to something else, then ```halfedge()->next()->twin()``` would also change.
+    As recommended, I drew a pair of triangles before and after the edge flip operation. For every element (edge, face, half-edge), I marked which element each reference pointed to after the change. For the first version of the code, I simply made copies of iterators to each element at the very beginning so that none of them would be overwritten or invalidated by setting references in between. For example, if <code>halfedge()->next()</code> gets assigned to something else, then <code>halfedge()->next()->twin()</code> would also change.
 
-    After that, I cleaned up the code a bit by removing some assignments that weren't necessary, as well as using the direct form (i.e. ```halfedge()->next()->twin()```) instead of making a copy of the iterator for references that never change.
+    After that, I cleaned up the code a bit by removing some assignments that weren't necessary, as well as using the direct form (i.e. <code>halfedge()->next()->twin()</code>) instead of making a copy of the iterator for references that never change.
 </p>
 <br>
 
@@ -207,12 +231,25 @@
 <b>
   Show screenshots of the teapot before and after some edge flips.
 </b>
-
 <div align="middle">
-  <img src="images/edgeflip.png" align="middle" width="50%">
+  <table style="width:100%">
+    <tr align="center">
+      <td>
+        <img src="images/teapot.png" align="middle" width="300px" />
+        <figcaption>Unmodified</figcaption>
+      </td>
+      <td>
+        <img src="images/teapot_flip.png" align="middle" width="300px" />
+        <figcaption>Some Flips</figcaption>
+      </td>
+      <td>
+        <img src="images/teapot_flip_2.png" align="middle" width="300px" />
+        <figcaption>Some More Flips</figcaption>
+      </td>
+    </tr>
+  </table>
 </div>
 <br>
-
 
 <b>
     Write about your eventful debugging journey, if you have experienced one.
@@ -222,25 +259,58 @@
 </p>
 <br>
 
-
 <h3 align="middle">Part 5: Edge Split</h3>
 <b>
   Briefly explain how you implemented the edge split operation and describe any interesting implementation / debugging tricks you have used.
 </b>
 <p>
-    I created 6 new half-edges, 3 new edges, 2 new faces, and 1 new vertex using the corresponding newEdge, newFace, etc. functions. I did the same process as for edge flip. I took advantage of symmetry by organizing these elements into symmetric pairs that I set using a for loop to reduce the amount of code.
+    I created 6 new half-edges, 3 new edges, 2 new faces, and 1 new vertex using the corresponding newEdge, newFace, etc. functions. I did the same process as for edge flip, where I recorded each member of each element before and after the flip, and set them accordingly. I took advantage of symmetry by organizing these elements into symmetric pairs that I set using a for loop to reduce the amount of code.
+</p>
+  
+<div align="middle">
+  <img src="images/symmetry.png" align="middle" width="50%" />
+</div>
+
+<p>
+    As shown in the diagram, I created pairs of main, twin, and split half-edges, where the first of each pair belonged to one of the original triangles and the second belonged to the other. This allows me to run identical operations on each half using a for loop rather than needing to write the same code twice. It also makes it easier to implement splitting of boundary edges.
 </p>
 <br>
-
 
 <b>
     Show screenshots of a mesh before and after some edge splits. 
 </b>
-<div align="middle">
-  <img src="images/cube.png" align="middle" width="50%" />
-</div>
-<div align="middle">
-  <img src="images/cube_sharp.png" align="middle" width="50%" />
+
+ <div align="middle">
+   <table style="width:100%">
+     <tr align="center">
+       <td>
+         <img src="images/cube.png" align="middle" width="300px" />
+         <figcaption>Cube Unmodified</figcaption>
+       </td>
+       <td>
+         <img src="images/cube_sharp.png" align="middle" width="300px" />
+         <figcaption>Some Splits</figcaption>
+       </td>
+       <td>
+         <img src="images/cube_split.png" align="middle" width="300px" />
+         <figcaption>Some Other Splits</figcaption>
+       </td>
+     </tr>
+     <tr align="center">
+       <td>
+         <img src="images/quadball.png" align="middle" width="300px" />
+         <figcaption>Quadball Unmodified</figcaption>
+       </td>
+       <td>
+         <img src="images/quadball_split.png" align="middle" width="300px" />
+         <figcaption>Some Splits</figcaption>
+       </td>
+       <td>
+         <img src="images/quadball_split_2.png" align="middle" width="300px" />
+         <figcaption>Some More Splits</figcaption>
+       </td>
+     </tr>
+   </table>
 </div>
 <br>
 
@@ -250,14 +320,26 @@
 <div align="middle">
 </b>
 <div align="middle">
-  <img src="images/teapot_flat.png" align="middle" width="400px" />
-</div>
-<div align="middle">
-  <img src="images/edgesplits.png" align="middle" width="50%" />
+  <table style="width:100%">
+    <tr align="center">
+      <td>
+        <img src="images/bean.png" align="middle" width="300px" />
+        <figcaption>Bean Unmodified</figcaption>
+      </td>
+      <td>
+        <img src="images/bean_split.png" align="middle" width="300px" />
+        <figcaption>Some Flips and Splits</figcaption>
+      </td>
+      <td>
+        <img src="images/bean_split_2.png" align="middle" width="300px" />
+        <figcaption>Some More Flips and Splits</figcaption>
+      </td>
+    </tr>
+  </table>
 </div>
 
 
-  <br />
+<br />
 
 
   <b>
@@ -273,8 +355,13 @@
     If you have implemented support for boundary edges, show screenshots of your implementation properly handling split operations on boundary edges.
   </b>
   <p>
-    N/A
+    My code already took advantage of symmetry to reduce code complexity, so I simply only ran one iteration instead of both. I also set the <code>isBoundary</code> property of the new face to be the same as the old face.
+
+    However, the starter code cannot successfully load a file with boundaries (giving "cannot dereference value-initialized list iterator" when loading the mesh, before any student code is executed), so I was unable to test this. Another issue is that since the mesh stores boundary information in faces rather than in edges, when splitting an edge that ended on a boundary but was not part of it, it is necessary to determine which of the new faces should be marked as a boundary face. I am not sure if this is possible since the <code>twin()</code> reference for a half-edge lying on a boundary is uninitialized, so it may or may not point to a valid face, so simply testing the twins of each half-edge may not be reliable. To truly solve this issue, it would be best if boundary information was stored in edges or half-edges rather than in faces.
   </p>
+  <div align="middle">
+    <img src="images/boundary.png" align="middle" width="50%" />
+  </div>
   <br />
 
 
@@ -283,13 +370,13 @@
     Briefly explain how you implemented the loop subdivision and describe any interesting implementation / debugging tricks you have used.
   </b>
   <p>
-    Following the recommended process, I first calculated the new positions every vertex by implementing the formula given in the spec: ```(1 - n * u)* v->position + u * v->centroid```, where $n$ is the degree, $u$ is 0.1875 if $n = 3$ or $\frac{3}{8n}$ otherwise. The centroid is the mean position of adjacent vertices, computed by implementing ```Vertex::calculateCentroid()```. I simply iterated across all the half-edges rooted at the vertex using the same loop used to calculate vertex degree, and added together ```h->twin()->vertex()->position``` for each one.
+    Following the recommended process, I first calculated the new positions every vertex by implementing the formula given in the spec: <code>(1 - n * u)* v->position + u * v->centroid</code>, where $n$ is the degree, $u$ is 0.1875 if $n = 3$ or $\frac{3}{8n}$ otherwise. The centroid is the mean position of adjacent vertices, computed by implementing <code>Vertex::calculateCentroid()</code>. I simply iterated across all the half-edges rooted at the vertex using the same loop used to calculate vertex degree, and added together <code>h->twin()->vertex()->position</code> for each one.
 
-    I then calculated the new positions of the new vertex that splits each edge as ```e->newPosition = 0.375 * (a + b) + 0.125 * (c + d)``` where $a, b$ are the positions of the endpoints of the edge and $c, d$ are the vertex of the triangles that contain the edge $e$ which are not in $e$.
+    I then calculated the new positions of the new vertex that splits each edge as <code>e->newPosition = 0.375 * (a + b) + 0.125 * (c + d)</code> where $a, b$ are the positions of the endpoints of the edge and $c, d$ are the vertex of the triangles that contain the edge $e$ which are not in $e$.
 
-    Next, I split every edge using the ```splitEdge``` function. I modified the splitEdge function so that the new edges created are marked with ```isNew = true``` except that the new edge that is the second half of the edge that was split remains ```isNew = false```. The new vertex is also marked with ```isNew = true```. I iterate through every new edge, and if it has ```isNew = true```, and one of its endpoints has ```isNew = true``` while the other has ```isNew = false```, I flip that edge. In particular, I reuse the iterator that I used to iterate through all the original edges to split them. Since the list of edges is expanding, I can't use list::end(), but rather have to use a numerical for loop until nEdges iterations. Then the iterator points to the (nEdges + 1)th element, where nEdges is the original number of edges in the mesh. All of the newly created edges are appended to the end of the list, so they are all past this point, so we can save time by iterating from this point rather than starting from the beginning.
+    Next, I split every edge using the <code>splitEdge</code> function. I modified the splitEdge function so that the new edges created are marked with <code>isNew = true</code> except that the new edge that is the second half of the edge that was split remains <code>isNew = false</code>. The new vertex is also marked with <code>isNew = true</code>. I iterate through every new edge, and if it has <code>isNew = true</code>, and one of its endpoints has <code>isNew = true</code> while the other has <code>isNew = false</code>, I flip that edge. In particular, I reuse the iterator that I used to iterate through all the original edges to split them. Since the list of edges is expanding, I can't use <code>list::end()</code>, but rather have to use a numerical for loop until <code>nEdges</code> iterations. Then the iterator points to the <code>(nEdges + 1)</code>th element, where nEdges is the original number of edges in the mesh. All of the newly created edges are appended to the end of the list, so they are all past this point, so we can save time by iterating from this point rather than starting from the beginning.
 
-    Finally, I iterate through every original edge and set the newPosition of the vertex that split them to the newPosition of that edge, and then I iterate through every vertex and set the position of that vertex to their newPosition.
+  Finally, I iterate through every original edge and set the newPosition of the vertex that split them to the newPosition of that edge, and then I iterate through every vertex and set the position of that vertex to their newPosition.
   </p>
   <br />
 
@@ -306,12 +393,19 @@
     <img src="images/cube_sharp.png" align="middle" width="50%" />
   </div>
   <div align="middle">
-    <img src="images/cube_sub_sharp.png" align="middle" width="50%" />
+    <img src="images/cube_sharp_subdiv.png" align="middle" width="50%" />
   </div>
 
   <p>
-    In this example, I split a few edges to add some more vertices near the top right corner to "reinforce" it. After subdivision, it has been smoothed out slightly less than other corners. This effect could be made stronger by shifting the new vertices to be right next to the original vertex, or by adding a "crease" parameter that weights the original vertex more heavily.
+    In this example, I split a few edges to add some more vertices near the top right corner to "reinforce" it. After subdivision, it has been smoothed out slightly less than other corners. This effect could be made stronger by shifting the new vertices to be right next to the original vertex, or by adding a "crease" parameter that weights the original vertex more heavily. This can also be seen in meshes with more vertices to begin with, since neighboring vertices are closer so the smoothing effect is reduced.
   </p>
+
+  <div align="middle">
+    <img src="images/planck.png" align="middle" width="50%" />
+  </div>
+  <div align="middle">
+    <img src="images/planck_subdiv.png" align="middle" width="50%" />
+  </div>
 
   <b>
     Load dae/cube.dae. Perform several iterations of loop subdivision on the cube. Notice that the cube becomes slightly asymmetric after repeated subdivisions. Can you pre-process the cube with edge flips and splits so that the cube subdivides symmetrically? Document these effects and explain why they occur. Also explain how your pre-processing helps alleviate the effects.
